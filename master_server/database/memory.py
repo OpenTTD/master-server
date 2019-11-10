@@ -19,7 +19,13 @@ class Database(DatabaseInterface):
         self._tokens = {}
 
     def check_session_key_token(self, session_key, token):
-        return self._tokens.get(session_key, None) is token
+        if session_key not in self._tokens:
+            # We don't know the session_key; so the only thing we can do is
+            # take it on face-value that the token is valid.
+            self.store_session_key_token(session_key, token)
+            return True
+
+        return self._tokens[session_key] == token
 
     def store_session_key_token(self, session_key, token):
         self._tokens[session_key] = token

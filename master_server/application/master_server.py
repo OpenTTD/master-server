@@ -34,10 +34,10 @@ class Application(Common):
 
         # Session-key is the current server time combined with the counter
         # and token.
-        session_key = (int(time.time()) << 24) | (self._session_counter << 8) | token
+        session_key = (int(time.time()) << 24) | (self._session_counter << 8)
 
         self.database.store_session_key_token(session_key, token)
-        return session_key
+        return session_key, token
 
     def receive_PACKET_UDP_SERVER_REGISTER(self, source, port, session_key):
         # session_key of None means it was version 1.
@@ -52,8 +52,8 @@ class Application(Common):
             # On first contact with the Master Server, a session-key is send
             # back to the server. This session-key is reused for any further
             # announcement, also on other IPs.
-            session_key = self._get_next_session_key()
-            source.protocol.send_PACKET_UDP_MASTER_SESSION_KEY(source.addr, session_key)
+            session_key, token = self._get_next_session_key()
+            source.protocol.send_PACKET_UDP_MASTER_SESSION_KEY(source.addr, session_key | token)
 
             # We don't query the server for now; we first let the server
             # accept the new session-key, and register itself with the new
@@ -62,7 +62,10 @@ class Application(Common):
             # got lost because of some UDP packet loss or what-ever).
             return
         else:
-            if not self.database.check_session_key_token(session_key, session_key & 0xFF):
+            token = session_key & 0xFF
+            session_key = (session_key >> 8) << 8
+
+            if not self.database.check_session_key_token(session_key, token):
                 log.info("Invalid session-key token from %s:%d; transmitting new session-key", source.ip, source.port)
 
                 # TODO -- If an IP has this wrong for more than 3 times, it is
@@ -70,8 +73,8 @@ class Application(Common):
 
                 # Send the server a new session-key, as clearly he got a bit
                 # confused.
-                session_key = self._get_next_session_key()
-                source.protocol.send_PACKET_UDP_MASTER_SESSION_KEY(source.addr, session_key)
+                session_key, token = self._get_next_session_key()
+                source.protocol.send_PACKET_UDP_MASTER_SESSION_KEY(source.addr, session_key | token)
                 return
 
         # We use the ip as announced by the socket, and the port as given
