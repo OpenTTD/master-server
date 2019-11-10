@@ -54,6 +54,13 @@ class Application(Common):
             # announcement, also on other IPs.
             session_key = self._get_next_session_key()
             source.protocol.send_PACKET_UDP_MASTER_SESSION_KEY(source.addr, session_key)
+
+            # We don't query the server for now; we first let the server
+            # accept the new session-key, and register itself with the new
+            # session-key again. The server will notice his registration is
+            # not acknowledged, and after a few seconds retries (thinking it
+            # got lost because of some UDP packet loss or what-ever).
+            return
         else:
             if not self.database.check_session_key_token(session_key, session_key & 0xFF):
                 log.info("Invalid session-key token from %s:%d; transmitting new session-key", source.ip, source.port)
