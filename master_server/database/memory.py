@@ -1,6 +1,9 @@
+import logging
 import time
 
 from .interface import DatabaseInterface
+
+log = logging.getLogger(__name__)
 
 
 class Server:
@@ -11,7 +14,6 @@ class Server:
 
 class Database(DatabaseInterface):
     def __init__(self):
-        self._session_keys = set()
         self._servers = {}
         self._session_key_map = {}
         self._tokens = {}
@@ -26,17 +28,20 @@ class Database(DatabaseInterface):
         return self._session_key_map.get((server_ip, server_port), None)
 
     def server_online(self, session_key, server_ip, server_port):
+        existing_session_key = self._find_session_key(server_ip, server_port)
+
+        # This should basically never happen; so resolving this conflict is
+        # difficult. The current assumption is that the server registered as
+        # two servers (with 2 different session-keys), and should in fact be
+        # a single server. So we remove the old entry, and collapse the two
+        # registrations on the same session-key.
+        if existing_session_key == session_key:
+            log.error("Existing registration for %s:%d under different session-key", server_ip, server_port)
+            del self._servers[existing_session_key]
+
         if session_key in self._servers:
             server = self._servers[session_key]
         else:
-            existing_session_key = self._find_session_key(server_ip, server_port)
-            if existing_session_key:
-                print(f"Server on {server_ip}:{server_port} already had a registration")
-                # TODO -- What is the conflict resolvement here?
-                # We can either overwrite the known server, and update it with
-                # the session_key, or we can remove the known server, and
-                # create a new entry.
-
             server = Server()
             self._servers[session_key] = server
             self._session_key_map[(server_ip, server_port)] = session_key
@@ -44,11 +49,16 @@ class Database(DatabaseInterface):
         server.ip_port.add((server_ip, server_port))
         server.last_announcement = time.time()
 
-        print(f"Server {session_key} with {server_ip}:{server_port} online")
+        print(f"Server {hex(session_key)} with {server_ip}:{server_port} online")
 
     def server_offline(self, server_ip, server_port):
         session_key = self._find_session_key(server_ip, server_port)
+        # When unregistering with multiple IPs, it also sends the unregister
+        # for every IP. So there is a good chance we already no longer know
+        # about this server.
+        if session_key is None:
+            return
 
-        print(f"Server {session_key} offline")
+        print(f"Server {hex(session_key)} offline")
 
         del self._servers[session_key]
