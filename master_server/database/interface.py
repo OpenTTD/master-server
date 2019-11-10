@@ -3,12 +3,12 @@ import abc
 
 class DatabaseInterface(abc.ABC):
     @abc.abstractmethod
-    def check_initial_session_key(self, session_key):
-        """
-        Check if there is any other server running with this session-key.
+    def check_session_key_token(self, session_key, token):
+        """Check if this session key token exists and is valid."""
 
-        If not, this session_key should be recorded as "in use".
-        """
+    @abc.abstractmethod
+    def store_session_key_token(self, session_key, token):
+        """Store a new session key token."""
 
     @abc.abstractmethod
     def server_online(self, session_key, server_ip, server_port):

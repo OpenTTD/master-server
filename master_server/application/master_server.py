@@ -14,31 +14,30 @@ class Application(Common):
         self.database = database
         self.protocol = None
 
-        self._init_session_key()
-        # There can be running multiple servers at once, all connected to a
-        # single database. To prevent them issuing the same session_key, check
-        # for this rare corner case.
-        while not self.database.check_initial_session_key(self._current_session_key):
-            self._init_session_key()
-
-    def _init_session_key(self):
-        # Version 1 uses 32+16 bits (IPv4 + port) for session-keys.
-        # To avoid conflicts between session-keys generated for version 1 and
-        # version 2, the first session-key we generate for version 2 should be
-        # passed the version 1 format.
-        # We use time() to initialize the first key; time() currently is already
-        # past 2^31 seconds, so bitshifting it with 17 would mean it also uses
-        # 48 bits like version 1. Adding another bitshift of 3 should give
-        # sufficient space to differentiate between version 1 and version 2.
-        # In other words: if the value is greater than 2^51, it is a version 2
-        # session-key; otherwise it is a version 1. This means they will never
-        # collide.
-        self._current_session_key = int(time.time()) << 20
+        self._session_counter = random.randrange(0, 256 * 256)
 
     def _get_next_session_key(self):
-        # Jump forward with some (semi) unpredictable amount
-        self._current_session_key += 1 + random.randrange(0, 255)
-        return self._current_session_key
+        #           |63      56       48       40       32       24       16       8       0|
+        #           |--------|--------|--------|--------|--------|--------|--------|--------|
+        # Version 1 |     unused      |      port       |                ip                 |
+        # Version 2 | unused |               time                |     counter     | token  |
+
+        # Add some random values to the counter, making it hard to guess the
+        # next value. This avoids collisions if multiple servers register at
+        # the same time.
+        self._session_counter += random.randrange(1, 16)
+        self._session_counter &= 0xFFFF
+
+        # The session key includes a token, to avoid people guessing the
+        # session_key of others.
+        token = random.randrange(0, 256)
+
+        # Session-key is the current server time combined with the counter
+        # and token.
+        session_key = (int(time.time()) << 24) | (self._session_counter << 8) | token
+
+        self.database.store_session_key_token(session_key, token)
+        return session_key
 
     def receive_PACKET_UDP_SERVER_REGISTER(self, source, port, session_key):
         # session_key of None means it was version 1.
@@ -55,6 +54,18 @@ class Application(Common):
             # announcement, also on other IPs.
             session_key = self._get_next_session_key()
             source.protocol.send_PACKET_UDP_MASTER_SESSION_KEY(source.addr, session_key)
+        else:
+            if not self.database.check_session_key_token(session_key, session_key & 0xFF):
+                log.info("Invalid session-key token from %s:%d; transmitting new session-key", source.ip, source.port)
+
+                # TODO -- If an IP has this wrong for more than 3 times, it is
+                # time to put that IP on a ban-list for a bit of time.
+
+                # Send the server a new session-key, as clearly he got a bit
+                # confused.
+                session_key = self._get_next_session_key()
+                source.protocol.send_PACKET_UDP_MASTER_SESSION_KEY(source.addr, session_key)
+                return
 
         # We use the ip as announced by the socket, and the port as given
         # in the packet. This is where the server should be located at.

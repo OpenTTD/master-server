@@ -14,13 +14,13 @@ class Database(DatabaseInterface):
         self._session_keys = set()
         self._servers = {}
         self._session_key_map = {}
+        self._tokens = {}
 
-    def check_initial_session_key(self, session_key):
-        if session_key in self._session_keys:
-            return True
+    def check_session_key_token(self, session_key, token):
+        return self._tokens.get(session_key, None) is token
 
-        self._session_keys.add(session_key)
-        return False
+    def store_session_key_token(self, session_key, token):
+        self._tokens[session_key] = token
 
     def _find_session_key(self, server_ip, server_port):
         return self._session_key_map.get((server_ip, server_port), None)
