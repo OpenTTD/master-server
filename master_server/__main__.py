@@ -8,6 +8,7 @@ from .helpers.click import (
 )
 from .helpers.sentry import click_sentry
 from .openttd import udp
+from .openttd.udp import click_proxy_protocol
 
 log = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ def click_logging():
     required=True,
     callback=import_module("master_server.database", "Database"),
 )
+@click_proxy_protocol
 def main(bind, port, app, db):
     database = db()
     application = app(database)
