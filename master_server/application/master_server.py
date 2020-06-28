@@ -101,7 +101,7 @@ class Application(Common):
         session_key, register_addr = response
 
         # This server can now be marked as online.
-        self.database.server_online(session_key, source.ip, source.port)
+        self.database.server_online(session_key, source.ip, source.port, info)
 
         # Inform the server that he is now registered.
         source.protocol.send_PACKET_UDP_MASTER_ACK_REGISTER(register_addr)
