@@ -12,3 +12,7 @@ class PacketInvalidType(PacketInvalid):
 
 class PacketInvalidData(PacketInvalid):
     """The packet contains invalid data."""
+
+
+class PacketTooBig(PacketInvalid):
+    """The packet is too big to transmit."""
