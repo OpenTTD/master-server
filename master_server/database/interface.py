@@ -25,3 +25,23 @@ class DatabaseInterface(abc.ABC):
     @abc.abstractmethod
     def server_offline(self, server_ip, server_port):
         """Mark the specified server offline."""
+
+    @abc.abstractmethod
+    def get_server_list_for_client(self, ipv6_list):
+        """
+        Get the server-list for clients.
+
+        This list contains only IP/port pairs, and no additional information.
+        """
+
+    @abc.abstractmethod
+    def get_server_info_for_web(self, server_id):
+        """Get details about a single server."""
+
+    @abc.abstractmethod
+    def get_server_list_for_web(self):
+        """
+        Get the server-list for web.
+
+        This list contains all the detailed information for each server.
+        """

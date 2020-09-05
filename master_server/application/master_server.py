@@ -1,10 +1,15 @@
+import asyncio
 import logging
 import random
 import time
 
-from .common import Common
+from .master_server_query import Common
+from ..openttd.protocol.enums import SLTType
 
 log = logging.getLogger(__name__)
+
+# How many seconds between stale-checks.
+TIME_BETWEEN_STALE_CHECK = 60 * 5
 
 
 class Application(Common):
@@ -15,6 +20,13 @@ class Application(Common):
         self.protocol = None
 
         self._session_counter = random.randrange(0, 256 * 256)
+
+        asyncio.ensure_future(self.check_stale_servers())
+
+    async def check_stale_servers(self):
+        while True:
+            await asyncio.sleep(TIME_BETWEEN_STALE_CHECK)
+            self.database.check_stale_servers()
 
     def _get_next_session_key(self):
         #           |63      56       48       40       32       24       16       8       0|
@@ -101,7 +113,8 @@ class Application(Common):
         session_key, register_addr = response
 
         # This server can now be marked as online.
-        self.database.server_online(session_key, source.ip, source.port, info)
+        if not self.database.server_online(session_key, source.ip, source.port, info):
+            return
 
         # Inform the server that he is now registered.
         source.protocol.send_PACKET_UDP_MASTER_ACK_REGISTER(register_addr)
@@ -110,5 +123,7 @@ class Application(Common):
         self.database.server_offline(source.ip, port)
 
     def receive_PACKET_UDP_CLIENT_GET_LIST(self, source, slt):
-        print(source, slt)
-        # TODO -- Implement this
+        servers = self.database.get_server_list_for_client(slt == SLTType.SLT_IPv6)
+        print(servers)
+
+        # TODO -- Implement sending 'servers' keeping MTU in mind
