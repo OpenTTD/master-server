@@ -39,16 +39,36 @@ def _get_server_id(server_ip, server_port):
 
 def _convert_server_to_dict(server):
     entry = {
-        "ipv4": {"ip": server.ipv4.ip, "port": server.ipv4.port},
-        "ipv6": {"ip": server.ipv6.ip, "port": server.ipv6.port},
         "info": {},
         "time_first_seen": server.time_first_seen,
         "time_last_seen": server.time_last_seen,
         "online": server.online,
     }
 
+    if server.ipv4:
+        entry["ipv4"] = {
+            "ip": str(server.ipv4.ip),
+            "port": server.ipv4.port,
+            "server_id": _get_server_id(server.ipv4.ip, server.ipv4.port),
+        }
+    if server.ipv6:
+        entry["ipv6"] = {
+            "ip": str(server.ipv6.ip),
+            "port": server.ipv6.port,
+            "server_id": _get_server_id(server.ipv6.ip, server.ipv6.port),
+        }
+
     for name, _ in getmembers(InfoMap, lambda o: isinstance(o, Attribute)):
-        entry["info"][name] = getattr(server.info, name)
+        if name == "grfs":
+            entry["info"]["grfs"] = [
+                {
+                    "grfid": grf["grfid"],
+                    "md5sum": grf["md5sum"].hex(),
+                }
+                for grf in getattr(server.info, name)
+            ]
+        else:
+            entry["info"][name] = getattr(server.info, name)
 
     return entry
 

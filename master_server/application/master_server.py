@@ -4,6 +4,7 @@ import random
 import time
 
 from .master_server_query import Common
+from ..openttd import udp
 from ..openttd.protocol.enums import SLTType
 from ..openttd.protocol.write import SAFE_MTU
 
@@ -20,6 +21,20 @@ SERVERS_CACHE_EXPIRE = 30
 TIME_BETWEEN_STALE_CHECK = 60 * 5
 
 
+async def run_server(application, bind, port):
+    loop = asyncio.get_event_loop()
+
+    transports = []
+    for bind in bind:
+        transport, _ = await loop.create_datagram_endpoint(
+            lambda: udp.OpenTTDProtocolUDP(application), local_addr=(bind, port), reuse_port=True
+        )
+        transports.append(transport)
+        log.info(f"Listening on {bind}:{port} ...")
+
+    return transports
+
+
 class Application(Common):
     def __init__(self, database):
         super().__init__()
@@ -34,6 +49,19 @@ class Application(Common):
         }
 
         asyncio.ensure_future(self.check_stale_servers())
+
+    def run(self, bind, msu_port, _):
+        loop = asyncio.get_event_loop()
+        transports = loop.run_until_complete(run_server(self, bind, msu_port))
+
+        try:
+            loop.run_forever()
+        except KeyboardInterrupt:
+            pass
+
+        log.info("Shutting down master server ...")
+        for transport in transports:
+            transport.close()
 
     async def check_stale_servers(self):
         while True:
