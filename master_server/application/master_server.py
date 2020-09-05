@@ -5,9 +5,17 @@ import time
 
 from .master_server_query import Common
 from ..openttd.protocol.enums import SLTType
+from ..openttd.protocol.write import SAFE_MTU
 
 log = logging.getLogger(__name__)
 
+# (SAFE_MTU - PacketSize - PacketType - type - count) / (in[6]_addr + port)
+MAX_COUNT = {
+    SLTType.SLT_IPv4: (SAFE_MTU - 2 - 1 - 2 - 1) // (4 + 2),
+    SLTType.SLT_IPv6: (SAFE_MTU - 2 - 1 - 2 - 1) // (16 + 2),
+}
+# Cache the in-game serverlist for 30 seconds.
+SERVERS_CACHE_EXPIRE = 30
 # How many seconds between stale-checks.
 TIME_BETWEEN_STALE_CHECK = 60 * 5
 
@@ -20,6 +28,10 @@ class Application(Common):
         self.protocol = None
 
         self._session_counter = random.randrange(0, 256 * 256)
+        self._servers_cache = {
+            SLTType.SLT_IPv4: None,
+            SLTType.SLT_IPv6: None,
+        }
 
         asyncio.ensure_future(self.check_stale_servers())
 
@@ -123,7 +135,17 @@ class Application(Common):
         self.database.server_offline(source.ip, port)
 
     def receive_PACKET_UDP_CLIENT_GET_LIST(self, source, slt):
-        servers = self.database.get_server_list_for_client(slt == SLTType.SLT_IPv6)
-        print(servers)
+        # Fetching all the servers is pretty expensive, so rate limit how often we do this.
+        if self._servers_cache[slt] is None or time.time() > self._servers_cache[slt]["expire"]:
+            servers = self.database.get_server_list_for_client(slt == SLTType.SLT_IPv6)
 
-        # TODO -- Implement sending 'servers' keeping MTU in mind
+            self._servers_cache[slt] = {
+                "servers": servers,
+                "expire": time.time() + SERVERS_CACHE_EXPIRE,
+            }
+
+        # Send the servers in packets that fit within the SAFE_MTU.
+        servers = self._servers_cache[slt]["servers"]
+        for i in range(0, len(servers), MAX_COUNT[slt]):
+            server_slice = servers[i : i + MAX_COUNT[slt]]
+            source.protocol.send_PACKET_UDP_MASTER_RESPONSE_LIST(source.addr, slt, server_slice)
