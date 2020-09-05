@@ -1,4 +1,3 @@
-import asyncio
 import click
 import logging
 
@@ -7,23 +6,11 @@ from .helpers.click import (
     import_module,
 )
 from .helpers.sentry import click_sentry
-from .openttd import udp
 from .openttd.udp import click_proxy_protocol
 
 log = logging.getLogger(__name__)
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
-
-
-async def run_server(application, bind, port):
-    loop = asyncio.get_event_loop()
-
-    transport, protocol = await loop.create_datagram_endpoint(
-        lambda: udp.OpenTTDProtocolUDP(application), local_addr=(bind, port), reuse_port=True
-    )
-    log.info(f"Listening on {bind}:{port} ...")
-
-    return transport
 
 
 @click_additional_options
@@ -36,11 +23,14 @@ def click_logging():
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click_logging  # Should always be on top, as it initializes the logging
 @click_sentry
-@click.option("--bind", help="The IP to bind the server to", default="::", show_default=True)
-@click.option("--port", help="Port of the server", default=3978, show_default=True)
+@click.option(
+    "--bind", help="The IP to bind the server to", multiple=True, default=["::1", "127.0.0.1"], show_default=True
+)
+@click.option("--msu-port", help="Port of the MSU server", default=3978, show_default=True, metavar="PORT")
+@click.option("--web-port", help="Port of the web server.", default=80, show_default=True, metavar="PORT")
 @click.option(
     "--app",
-    type=click.Choice(["master_server"], case_sensitive=False),
+    type=click.Choice(["master_server", "web_api"], case_sensitive=False),
     required=True,
     callback=import_module("master_server.application", "Application"),
 )
@@ -53,19 +43,10 @@ def click_logging():
 @click.option("--dynamodb-host", help="Hostname to use for the DynamoDB connection", default=None)
 @click.option("--dynamodb-region", help="Region to use for the DynamoDB connection", default=None)
 @click_proxy_protocol
-def main(bind, port, app, db, dynamodb_host, dynamodb_region):
+def main(bind, msu_port, web_port, app, db, dynamodb_host, dynamodb_region):
     database = db(dynamodb_host, dynamodb_region)
     application = app(database)
-
-    loop = asyncio.get_event_loop()
-    transport = loop.run_until_complete(run_server(application, bind, port))
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        pass
-
-    log.info(f"Shutting down {app} ...")
-    transport.close()
+    application.run(bind, msu_port, web_port)
 
 
 if __name__ == "__main__":

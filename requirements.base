@@ -1,3 +1,4 @@
+aiohttp
 click
 sentry-sdk
 PynamoDB
