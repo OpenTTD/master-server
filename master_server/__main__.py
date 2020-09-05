@@ -40,19 +40,21 @@ def click_logging():
 @click.option("--port", help="Port of the server", default=3978, show_default=True)
 @click.option(
     "--app",
-    type=click.Choice(["master_server", "updater"], case_sensitive=False),
+    type=click.Choice(["master_server"], case_sensitive=False),
     required=True,
     callback=import_module("master_server.application", "Application"),
 )
 @click.option(
     "--db",
-    type=click.Choice(["memory"], case_sensitive=False),
+    type=click.Choice(["dynamodb"], case_sensitive=False),
     required=True,
     callback=import_module("master_server.database", "Database"),
 )
+@click.option("--dynamodb-host", help="Hostname to use for the DynamoDB connection", default=None)
+@click.option("--dynamodb-region", help="Region to use for the DynamoDB connection", default=None)
 @click_proxy_protocol
-def main(bind, port, app, db):
-    database = db()
+def main(bind, port, app, db, dynamodb_host, dynamodb_region):
+    database = db(dynamodb_host, dynamodb_region)
     application = app(database)
 
     loop = asyncio.get_event_loop()
