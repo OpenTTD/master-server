@@ -16,13 +16,21 @@ jobs:
         state: in_progress
         description: "Deployment of ${{ github.event.deployment.payload.version }} to ${{ github.event.deployment.environment }} started"
 
-    - name: Deploy on AWS
+    - name: Deploy Server on AWS
       uses: openttd/actions/deploy-aws@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-region: ${{ secrets.AWS_REGION }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         name: MasterServer
+
+    - name: Deploy API on AWS
+      uses: openttd/actions/deploy-aws@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-region: ${{ secrets.AWS_REGION }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        name: MasterServerApi
 
     - if: success()
       name: Deployment successful
