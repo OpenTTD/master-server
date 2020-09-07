@@ -56,10 +56,11 @@ This will start an empty AWS DynamoDB server on port 8000.
 You can start the `master_server` by running:
 
 ```bash
-.env/bin/python -m master_server --app master_server --db dynamodb --dynamodb-host http://127.0.0.1:8000
+.env/bin/python -m master_server --app master_server --web-port 8081 --db dynamodb --dynamodb-host http://127.0.0.1:8000
 ```
 
 This will start the server on port 3978 (default) for you to work with locally.
+The webserver on port 8081 is just to monitor the health of the server.
 You can change your `/etc/hosts` or `C:\Windows\System32\drivers\etc` to map `master.openttd.org` to `127.0.0.1` and `::1` for local testing.
 
 #### Starting web_api
@@ -78,7 +79,7 @@ It does require some servers to be in the database to be useful, so make sure to
 ```bash
 docker build -t openttd/master-server:local .
 docker run --rm --name ms-dynamodb -p 8000:8000 amazon/dynamodb-local
-docker run --rm --link ms-dynamodb -p 127.0.0.1:3978:3978/udp -e AWS_ACCESS_KEY_ID=1 -e AWS_SECRET_ACCESS_KEY=1 openttd/master-server:local --app master_server --bind 0.0.0.0 --db dynamodb --dynamodb-host http://ms-dynamodb:8000
+docker run --rm --link ms-dynamodb -p 127.0.0.1:3978:3978/udp -p 127.0.0.1:8081:80 -e AWS_ACCESS_KEY_ID=1 -e AWS_SECRET_ACCESS_KEY=1 openttd/master-server:local --app master_server --bind 0.0.0.0 --db dynamodb --dynamodb-host http://ms-dynamodb:8000
 docker run --rm --link ms-dynamodb -p 127.0.0.1:8080:80 -e AWS_ACCESS_KEY_ID=1 -e AWS_SECRET_ACCESS_KEY=1 openttd/master-server:local --app web_api --bind 0.0.0.0 --db dynamodb --dynamodb-host http://ms-dynamodb:8000
 ```
 
