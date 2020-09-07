@@ -3,12 +3,16 @@ import logging
 import random
 import time
 
+from aiohttp import web
+from aiohttp.web_log import AccessLogger
+
 from .master_server_query import Common
 from ..openttd import udp
 from ..openttd.protocol.enums import SLTType
 from ..openttd.protocol.write import SAFE_MTU
 
 log = logging.getLogger(__name__)
+routes = web.RouteTableDef()
 
 # (SAFE_MTU - PacketSize - PacketType - type - count) / (in[6]_addr + port)
 MAX_COUNT = {
@@ -19,6 +23,24 @@ MAX_COUNT = {
 SERVERS_CACHE_EXPIRE = 30
 # How many seconds between stale-checks.
 TIME_BETWEEN_STALE_CHECK = 60 * 5
+
+
+@routes.get("/healthz")
+async def healthz_handler(request):
+    return web.HTTPOk()
+
+
+@routes.route("*", "/{tail:.*}")
+async def fallback(request):
+    log.warning("Unexpected URL: %s", request.url)
+    return web.HTTPNotFound()
+
+
+class ErrorOnlyAccessLogger(AccessLogger):
+    def log(self, request, response, time):
+        # Only log if the status was not successful
+        if not (200 <= response.status < 400):
+            super().log(request, response, time)
 
 
 async def run_server(application, bind, port):
@@ -50,14 +72,14 @@ class Application(Common):
 
         asyncio.ensure_future(self.check_stale_servers())
 
-    def run(self, bind, msu_port, _):
+    def run(self, bind, msu_port, web_port):
         loop = asyncio.get_event_loop()
         transports = loop.run_until_complete(run_server(self, bind, msu_port))
 
-        try:
-            loop.run_forever()
-        except KeyboardInterrupt:
-            pass
+        webapp = web.Application()
+        webapp.add_routes(routes)
+
+        web.run_app(webapp, host=bind, port=web_port, access_log_class=ErrorOnlyAccessLogger)
 
         log.info("Shutting down master server ...")
         for transport in transports:
