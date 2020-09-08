@@ -2,7 +2,10 @@ import asyncio
 import click
 import logging
 
-from .protocol.exceptions import PacketInvalid
+from .protocol.exceptions import (
+    NoProxyProtocol,
+    PacketInvalid,
+)
 from .protocol.source import Source
 from .receive import OpenTTDProtocolReceive
 from .send import OpenTTDProtocolSend
@@ -19,6 +22,7 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
         self._callback = callback_class
         self._callback.protocol = self
         self.is_ipv6 = None
+        self._mapping = {}
 
     def connection_made(self, transport):
         self.transport = transport
@@ -28,15 +32,25 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
             self.is_ipv6 = False
 
     def _detect_source_ip_port(self, socket_addr, data):
-        if not self.proxy_protocol:
+        # Either proxy protocol is not enabled, or the packet is not from a
+        # local source.
+        if not self.proxy_protocol or not socket_addr[0].startswith("10."):
             source = Source(self, socket_addr, socket_addr[0], socket_addr[1])
             return source, data
 
         # If enabled, expect new connections to start with PROXY. In this
         # header is the original source of the connection.
         if data[0:5] != b"PROXY":
-            log.warning("Receive data without a proxy protocol header from %s:%d", self.source.ip, self.source.port)
-            return data
+            # For existing connections, we should already know the mapping.
+            # This is how for example nginx works, where only the first packet
+            # of an UDP stream has the proxy protocol header, and no other
+            # packets from the same source will.
+            if socket_addr in self._mapping:
+                return self._mapping[socket_addr], data
+
+            raise NoProxyProtocol(
+                f"Receive data without a proxy protocol header from {socket_addr[0]}:{socket_addr[1]}"
+            )
 
         # This message arrived via the proxy protocol; use the information
         # from this to figure out the real ip and port.
@@ -45,11 +59,12 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
         data = data[proxy_end + 2 :]
 
         # Example how 'proxy' looks:
-        #  PROXY TCP4 127.0.0.1 127.0.0.1 33487 12345
+        #  PROXY UDP4 127.0.0.1 127.0.0.1 33487 12345
 
         (_, _, ip, _, port, _) = proxy.split(" ")
         source = Source(self, socket_addr, ip, int(port))
 
+        self._mapping[socket_addr] = source
         return source, data
 
     def datagram_received(self, data, socket_addr):
