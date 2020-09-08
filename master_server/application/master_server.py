@@ -74,7 +74,7 @@ class Application(Common):
 
     def run(self, bind, msu_port, web_port):
         loop = asyncio.get_event_loop()
-        transports = loop.run_until_complete(run_server(self, bind, msu_port))
+        loop.run_until_complete(run_server(self, bind, msu_port))
 
         webapp = web.Application()
         webapp.add_routes(routes)
@@ -82,8 +82,6 @@ class Application(Common):
         web.run_app(webapp, host=bind, port=web_port, access_log_class=ErrorOnlyAccessLogger)
 
         log.info("Shutting down master server ...")
-        for transport in transports:
-            transport.close()
 
     async def check_stale_servers(self):
         while True:
