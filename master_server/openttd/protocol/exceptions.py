@@ -16,3 +16,7 @@ class PacketInvalidData(PacketInvalid):
 
 class PacketTooBig(PacketInvalid):
     """The packet is too big to transmit."""
+
+
+class NoProxyProtocol(Exception):
+    """The received data did not follow proxy-protocol specs."""
