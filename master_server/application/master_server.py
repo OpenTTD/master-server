@@ -118,6 +118,7 @@ class Application(Common):
             # generate a session-key for version 1, but based on
             # static information of the server.
             session_key = int(source.ip) | (port << 32)
+            self.database.store_session_key_token(session_key, 0)
         elif session_key == 0:
             # Session-keys were introduced in version 2.
             # This session-key tracks the same server over multiple IPs.
