@@ -84,6 +84,12 @@ class Application(Common):
         log.info("Shutting down master server ...")
 
     async def check_stale_servers(self):
+        # Randomly sleep a bit at startup. Multiple instances of this server
+        # are most likely started are roughly the same time, causing stress
+        # on the database server. By randomly sleeping for a bit there is
+        # a high chance they are further apart from each other.
+        await asyncio.sleep(random.randrange(0, TIME_BETWEEN_STALE_CHECK))
+
         while True:
             await asyncio.sleep(TIME_BETWEEN_STALE_CHECK)
 
