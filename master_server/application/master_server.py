@@ -86,7 +86,14 @@ class Application(Common):
     async def check_stale_servers(self):
         while True:
             await asyncio.sleep(TIME_BETWEEN_STALE_CHECK)
-            self.database.check_stale_servers()
+
+            # As we are in a task, we need to explicitly log the exception,
+            # otherwise it won't show up in the logs in a sane matter.
+            try:
+                self.database.check_stale_servers()
+            except Exception:
+                log.exception("Exception during check on stale servers")
+                return
 
     def _get_next_session_key(self):
         #           |63      56       48       40       32       24       16       8       0|
