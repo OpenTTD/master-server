@@ -124,6 +124,10 @@ class Database(DatabaseInterface):
         except Server.DoesNotExist:
             return False
 
+        # Don't accept servers with empty revision or name.
+        if info["server_revision"] == "" or info["server_name"] == "":
+            return False
+
         # Update the server information.
         actions = [
             Server.info.set(InfoMap(**info)),
