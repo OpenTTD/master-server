@@ -9,6 +9,7 @@ docutils==0.15.2
 idna==2.10
 jmespath==0.10.0
 multidict==4.7.6
+pproxy==2.3.5
 pynamodb==4.3.3
 python-dateutil==2.8.1
 sentry-sdk==0.17.3

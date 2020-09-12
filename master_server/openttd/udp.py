@@ -1,6 +1,7 @@
 import asyncio
 import click
 import logging
+import pproxy
 
 from .protocol.exceptions import (
     NoProxyProtocol,
@@ -14,8 +15,21 @@ from ..helpers.click import click_additional_options
 log = logging.getLogger(__name__)
 
 
+class SocksProtocol(asyncio.DatagramProtocol):
+    def __init__(self, data, callback):
+        self._data = data
+        self._callback = callback
+
+    def connection_made(self, transport):
+        transport.sendto(self._data)
+
+    def datagram_received(self, data, addr):
+        self._callback(data)
+
+
 class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenTTDProtocolSend):
     proxy_protocol = False
+    socks_proxy = None
 
     def __init__(self, callback_class):
         super().__init__()
@@ -23,6 +37,10 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
         self._callback.protocol = self
         self.is_ipv6 = None
         self._mapping = {}
+
+        if self.socks_proxy:
+            self._socks_conn = pproxy.Connection(self.socks_proxy)
+            self._socks_addr = (self._socks_conn.host_name, self._socks_conn.port)
 
     def connection_made(self, transport):
         self.transport = transport
@@ -85,8 +103,21 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
     def error_received(self, exc):
         print("error on socket: ", exc)
 
-    def send_packet(self, socket_addr, data):
+    def send_packet(self, socket_addr, data, new_connection=False):
+        if self.socks_proxy and new_connection:
+            # Modify the packet to have a SOCKS header with relay information.
+            data = self._socks_conn.prepare_udp_connection(socket_addr[0], socket_addr[1], data)
+
+            response = asyncio.Future()
+            protocol = SocksProtocol(data, response.set_result)
+
+            # Prepare the coroutine to fire the packet. It is up to the caller
+            # to await the results
+            request = asyncio.get_event_loop().create_datagram_endpoint(lambda: protocol, remote_addr=self._socks_addr)
+            return request, response
+
         self.transport.sendto(data, socket_addr)
+        return None, None
 
 
 @click_additional_options
@@ -95,5 +126,10 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
     help="Enable Proxy Protocol (v1), and expect all incoming package to have this header.",
     is_flag=True,
 )
-def click_proxy_protocol(proxy_protocol):
+@click.option(
+    "--socks-proxy",
+    help="Use a SOCKS proxy to query game servers.",
+)
+def click_proxy_protocol(proxy_protocol, socks_proxy):
     OpenTTDProtocolUDP.proxy_protocol = proxy_protocol
+    OpenTTDProtocolUDP.socks_proxy = socks_proxy

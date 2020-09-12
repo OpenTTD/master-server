@@ -9,23 +9,23 @@ from .protocol.write import (
 
 
 class OpenTTDProtocolSend:
-    def send_PACKET_UDP_MASTER_SESSION_KEY(self, addr, session_key):
+    def send_PACKET_UDP_MASTER_SESSION_KEY(self, addr, session_key, new_connection=False):
         data = write_init(PacketUDPType.PACKET_UDP_MASTER_SESSION_KEY)
         data = write_uint64(data, session_key)
         data = write_presend(data)
-        self.send_packet(addr, data)
+        return self.send_packet(addr, data, new_connection=new_connection)
 
-    def send_PACKET_UDP_MASTER_ACK_REGISTER(self, addr):
+    def send_PACKET_UDP_MASTER_ACK_REGISTER(self, addr, new_connection=False):
         data = write_init(PacketUDPType.PACKET_UDP_MASTER_ACK_REGISTER)
         data = write_presend(data)
-        self.send_packet(addr, data)
+        return self.send_packet(addr, data, new_connection=new_connection)
 
-    def send_PACKET_UDP_CLIENT_FIND_SERVER(self, addr):
+    def send_PACKET_UDP_CLIENT_FIND_SERVER(self, addr, new_connection=False):
         data = write_init(PacketUDPType.PACKET_UDP_CLIENT_FIND_SERVER)
         data = write_presend(data)
-        self.send_packet(addr, data)
+        return self.send_packet(addr, data, new_connection=new_connection)
 
-    def send_PACKET_UDP_MASTER_RESPONSE_LIST(self, addr, slt, servers):
+    def send_PACKET_UDP_MASTER_RESPONSE_LIST(self, addr, slt, servers, new_connection=False):
         data = write_init(PacketUDPType.PACKET_UDP_MASTER_RESPONSE_LIST)
         data = write_uint8(data, slt.value + 1)
         data = write_uint16(data, len(servers))
@@ -35,4 +35,4 @@ class OpenTTDProtocolSend:
                 data = write_uint8(data, packed[i])
             data = write_uint16(data, server["port"])
         data = write_presend(data)
-        self.send_packet(addr, data)
+        return self.send_packet(addr, data, new_connection=new_connection)
