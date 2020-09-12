@@ -49,7 +49,7 @@ class InfoMap(MapAttribute):
     clients_max = NumberAttribute()
     clients_on = NumberAttribute()
     spectators_on = NumberAttribute()
-    map_name = UnicodeAttribute()
+    map_name = UnicodeAttribute(null=True)
     map_width = NumberAttribute()
     map_height = NumberAttribute()
     map_set = NumberAttribute()
