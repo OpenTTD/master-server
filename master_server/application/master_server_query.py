@@ -47,8 +47,6 @@ class Common:
 
             retry_left -= 1
 
-        log.info("No response from %s:%d after %d attempts", ip, port, retry)
-
         # Forget about this query, as we consider it failed
         ms_key = (ip, port)
         del self._ms_mapping[ms_key]
