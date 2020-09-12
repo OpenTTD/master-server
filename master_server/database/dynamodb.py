@@ -1,3 +1,4 @@
+import click
 import hashlib
 import ipaddress
 import logging
@@ -16,6 +17,7 @@ from .dynamodb_models import (
     Server,
 )
 from .interface import DatabaseInterface
+from ..helpers.click import click_additional_options
 
 log = logging.getLogger(__name__)
 
@@ -74,6 +76,10 @@ def _convert_server_to_dict(server):
 
 
 class Database(DatabaseInterface):
+    host = None
+    region = None
+    table_prefix = None
+
     def _update_ip_port(self, server_id, session_key):
         try:
             ip_port = IpPort.get(server_id)
@@ -92,14 +98,15 @@ class Database(DatabaseInterface):
         except IpPort.DoesNotExist:
             pass
 
-    def __init__(self, host, region):
+    def __init__(self):
         # PynamoDB only allows to set these fields statically, while it is
         # much more likely you would like them dynamically. So .. we just
         # overwrite the fields. Sadly, this needs to be done per model, making
         # this a bit annoying to maintain.
         for model in (Server, IpPort):
-            model.Meta.host = host
-            model.Meta.region = region
+            model.Meta.host = self.host
+            model.Meta.region = self.region
+            model.Meta.table_name = f"{self.table_prefix}{model.Meta.table_name}"
 
             if not model.exists():
                 model.create_table(wait=True)
@@ -223,3 +230,13 @@ class Database(DatabaseInterface):
             True, Server.time_last_seen < datetime.utcnow().timestamp() - STALE_SERVER_TIMEOUT
         ):
             ip_port.update(actions=[IpPort.online.set(False), IpPort.ttl.set(timedelta(seconds=TTL))])
+
+
+@click_additional_options
+@click.option("--dynamodb-host", help="Hostname to use for the DynamoDB connection", default=None)
+@click.option("--dynamodb-region", help="Region to use for the DynamoDB connection", default=None)
+@click.option("--dynamodb-prefix", help="Prefix for DynamoDB table names", default="")
+def click_database_dynamodb(dynamodb_host, dynamodb_region, dynamodb_prefix):
+    Database.host = dynamodb_host
+    Database.region = dynamodb_region
+    Database.table_prefix = dynamodb_prefix
