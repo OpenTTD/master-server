@@ -1,6 +1,7 @@
 import click
 import logging
 
+from .database.dynamodb import click_database_dynamodb
 from .helpers.click import (
     click_additional_options,
     import_module,
@@ -40,11 +41,10 @@ def click_logging():
     required=True,
     callback=import_module("master_server.database", "Database"),
 )
-@click.option("--dynamodb-host", help="Hostname to use for the DynamoDB connection", default=None)
-@click.option("--dynamodb-region", help="Region to use for the DynamoDB connection", default=None)
+@click_database_dynamodb
 @click_proxy_protocol
-def main(bind, msu_port, web_port, app, db, dynamodb_host, dynamodb_region):
-    database = db(dynamodb_host, dynamodb_region)
+def main(bind, msu_port, web_port, app, db):
+    database = db()
     application = app(database)
     application.run(bind, msu_port, web_port)
 
