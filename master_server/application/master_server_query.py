@@ -31,16 +31,23 @@ class Common:
             if request and response:
 
                 async def send_via_socks():
-                    await request
-                    data = await response
-                    protocol.datagram_received(data, server_addr)
+                    transport, _ = await request
+                    try:
+                        data = await response
+                        protocol.datagram_received(data, server_addr)
+                    finally:
+                        transport.close()
 
                 # The SOCKS connection times out after 30 seconds; we want it
                 # cancelled earlier, so we create a new task, and stop waiting
                 # for it after our own timeout.
                 task = asyncio.ensure_future(send_via_socks())
-                await asyncio.sleep(timeout)
-                task.cancel()
+                try:
+                    await asyncio.sleep(timeout)
+                finally:
+                    # Either we got cancelled or the timeout happened; either
+                    # way, close up the UDP socket.
+                    task.cancel()
             else:
                 protocol.send_PACKET_UDP_CLIENT_FIND_SERVER(server_addr)
                 await asyncio.sleep(timeout)
