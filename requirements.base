@@ -1,4 +1,5 @@
 aiohttp
 click
 sentry-sdk
+pproxy
 PynamoDB

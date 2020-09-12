@@ -26,9 +26,25 @@ class Common:
         # cancelled, so we don't have to worry about that.
         retry_left = retry
         while retry_left > 0:
-            protocol.send_PACKET_UDP_CLIENT_FIND_SERVER(server_addr)
+            request, response = protocol.send_PACKET_UDP_CLIENT_FIND_SERVER(server_addr, new_connection=True)
 
-            await asyncio.sleep(timeout)
+            if request and response:
+
+                async def send_via_socks():
+                    await request
+                    data = await response
+                    protocol.datagram_received(data, server_addr)
+
+                # The SOCKS connection times out after 30 seconds; we want it
+                # cancelled earlier, so we create a new task, and stop waiting
+                # for it after our own timeout.
+                task = asyncio.ensure_future(send_via_socks())
+                await asyncio.sleep(timeout)
+                task.cancel()
+            else:
+                protocol.send_PACKET_UDP_CLIENT_FIND_SERVER(server_addr)
+                await asyncio.sleep(timeout)
+
             retry_left -= 1
 
         log.info("No response from %s:%d after %d attempts", ip, port, retry)
