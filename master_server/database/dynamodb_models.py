@@ -62,16 +62,16 @@ class InfoMap(MapAttribute):
 class Server(Model):
     class OnlineIndex(GlobalSecondaryIndex):
         class Meta:
-            read_capacity_units = 1
-            write_capacity_units = 1
+            read_capacity_units = 3
+            write_capacity_units = 3
             projection = AllProjection()
 
         online = BooleanAsNumberAttribute(hash_key=True)
 
     class TimeLastSeenIndex(GlobalSecondaryIndex):
         class Meta:
-            read_capacity_units = 1
-            write_capacity_units = 1
+            read_capacity_units = 3
+            write_capacity_units = 3
             projection = AllProjection()
 
         online = BooleanAsNumberAttribute(hash_key=True)
@@ -79,8 +79,8 @@ class Server(Model):
 
     class Meta:
         table_name = "MSU-server"
-        read_capacity_units = 5
-        write_capacity_units = 5
+        read_capacity_units = 3
+        write_capacity_units = 3
 
     session_key = NumberAttribute(hash_key=True)
     token = NumberAttribute()
@@ -105,16 +105,16 @@ class Server(Model):
 class IpPort(Model):
     class OnlineIndex(GlobalSecondaryIndex):
         class Meta:
-            read_capacity_units = 1
-            write_capacity_units = 1
+            read_capacity_units = 3
+            write_capacity_units = 3
             projection = AllProjection()
 
         online = BooleanAsNumberAttribute(hash_key=True)
 
     class TimeLastSeenIndex(GlobalSecondaryIndex):
         class Meta:
-            read_capacity_units = 1
-            write_capacity_units = 1
+            read_capacity_units = 3
+            write_capacity_units = 3
             projection = AllProjection()
 
         online = BooleanAsNumberAttribute(hash_key=True)
@@ -122,8 +122,8 @@ class IpPort(Model):
 
     class Meta:
         table_name = "MSU-ip-port"
-        read_capacity_units = 5
-        write_capacity_units = 5
+        read_capacity_units = 3
+        write_capacity_units = 3
 
     server_id = UnicodeAttribute(hash_key=True)
     session_key = NumberAttribute()
