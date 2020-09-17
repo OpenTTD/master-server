@@ -36,7 +36,6 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
         self._callback = callback_class
         self._callback.protocol = self
         self.is_ipv6 = None
-        self._mapping = {}
 
         if self.socks_proxy:
             self._socks_conn = pproxy.Connection(self.socks_proxy)
@@ -59,13 +58,6 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
         # If enabled, expect new connections to start with PROXY. In this
         # header is the original source of the connection.
         if data[0:5] != b"PROXY":
-            # For existing connections, we should already know the mapping.
-            # This is how for example nginx works, where only the first packet
-            # of an UDP stream has the proxy protocol header, and no other
-            # packets from the same source will.
-            if socket_addr in self._mapping:
-                return self._mapping[socket_addr], data
-
             raise NoProxyProtocol(
                 f"Receive data without a proxy protocol header from {socket_addr[0]}:{socket_addr[1]}"
             )
@@ -82,7 +74,6 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
         (_, _, ip, _, port, _) = proxy.split(" ")
         source = Source(self, socket_addr, ip, int(port))
 
-        self._mapping[socket_addr] = source
         return source, data
 
     def datagram_received(self, data, socket_addr):
@@ -123,7 +114,8 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
 @click_additional_options
 @click.option(
     "--proxy-protocol",
-    help="Enable Proxy Protocol (v1), and expect all incoming package to have this header.",
+    help="Enable Proxy Protocol (v1), and expect all incoming packets to have this header "
+    "(HINT: for nginx, configure proxy_requests to 1).",
     is_flag=True,
 )
 @click.option(
