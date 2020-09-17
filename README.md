@@ -56,7 +56,7 @@ This will start an empty AWS DynamoDB server on port 8000.
 You can start the `master_server` by running:
 
 ```bash
-.env/bin/python -m master_server --app master_server --web-port 8081 --db dynamodb --dynamodb-host http://127.0.0.1:8000
+AWS_ACCESS_KEY_ID=1 AWS_SECRET_ACCESS_KEY=1 .env/bin/python -m master_server --app master_server --web-port 8081 --db dynamodb --dynamodb-host http://127.0.0.1:8000
 ```
 
 This will start the server on port 3978 (default) for you to work with locally.
@@ -68,7 +68,7 @@ You can change your `/etc/hosts` or `C:\Windows\System32\drivers\etc` to map `ma
 You can start the `web_api` by running:
 
 ```bash
-.env/bin/python -m master_server --app web_api --web-port 8080 --db dynamodb --dynamodb-host http://127.0.0.1:8000
+AWS_ACCESS_KEY_ID=1 AWS_SECRET_ACCESS_KEY=1 .env/bin/python -m master_server --app web_api --web-port 8080 --db dynamodb --dynamodb-host http://127.0.0.1:8000
 ```
 
 This will start the HTTP server on port 8080 for you to work with locally.
