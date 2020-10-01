@@ -96,6 +96,7 @@ class Database(DatabaseInterface):
                 condition=Server.session_key == ip_port.session_key,
             )
         except IpPort.DoesNotExist:
+            # New server, so nothing to update.
             pass
 
     def __init__(self):
