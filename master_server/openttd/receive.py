@@ -164,6 +164,9 @@ class OpenTTDProtocolReceive:
             payload["map_set"], data = read_uint8(data)
             payload["dedicated"], data = read_uint8(data)
 
+        if len(data) != 0:
+            raise PacketInvalidData("more bytes than expected")
+
         return payload
 
     @staticmethod
