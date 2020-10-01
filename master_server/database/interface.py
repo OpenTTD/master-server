@@ -11,7 +11,7 @@ class DatabaseInterface(abc.ABC):
         """Store a new session key token."""
 
     @abc.abstractmethod
-    def server_online(self, session_key, server_ip, server_port):
+    def server_online(self, session_key, server_ip, server_port, info):
         """
         Mark the specified server online.
 
