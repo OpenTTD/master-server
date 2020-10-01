@@ -49,7 +49,6 @@ class Common:
                     # way, close up the UDP socket.
                     task.cancel()
             else:
-                protocol.send_PACKET_UDP_CLIENT_FIND_SERVER(server_addr)
                 await asyncio.sleep(timeout)
 
             retry_left -= 1
