@@ -81,7 +81,7 @@ class Common:
         task, user_data = self._ms_mapping.get(ms_key, (None, None))
         if not task:
             log.info("Response from %s:%d, but we did not expect a response.", ip, port)
-            return
+            return None
 
         # Cancel the timeout timer, and make sure that any retransmit is
         # not being processed anymore.
