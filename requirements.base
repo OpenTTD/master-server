@@ -1,5 +1,6 @@
 aiohttp
 click
 sentry-sdk
+openttd-helpers
 pproxy
 PynamoDB

@@ -9,6 +9,7 @@ docutils==0.16
 idna==2.10
 jmespath==0.10.0
 multidict==4.7.6
+openttd-helpers==1.0.0
 pproxy==2.3.7
 pynamodb==4.3.3
 python-dateutil==2.8.1

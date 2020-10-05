@@ -8,6 +8,7 @@ from datetime import (
     timedelta,
 )
 from inspect import getmembers
+from openttd_helpers import click_helper
 from pynamodb.attributes import Attribute
 
 from .dynamodb_models import (
@@ -17,7 +18,6 @@ from .dynamodb_models import (
     Server,
 )
 from .interface import DatabaseInterface
-from ..helpers.click import click_additional_options
 
 log = logging.getLogger(__name__)
 
@@ -233,7 +233,7 @@ class Database(DatabaseInterface):
             ip_port.update(actions=[IpPort.online.set(False), IpPort.ttl.set(timedelta(seconds=TTL))])
 
 
-@click_additional_options
+@click_helper.extend
 @click.option("--dynamodb-host", help="Hostname to use for the DynamoDB connection", default=None)
 @click.option("--dynamodb-region", help="Region to use for the DynamoDB connection", default=None)
 @click.option("--dynamodb-prefix", help="Prefix for DynamoDB table names", default="")
