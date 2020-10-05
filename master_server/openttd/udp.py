@@ -3,6 +3,8 @@ import click
 import logging
 import pproxy
 
+from openttd_helpers import click_helper
+
 from .protocol.exceptions import (
     NoProxyProtocol,
     PacketInvalid,
@@ -10,7 +12,6 @@ from .protocol.exceptions import (
 from .protocol.source import Source
 from .receive import OpenTTDProtocolReceive
 from .send import OpenTTDProtocolSend
-from ..helpers.click import click_additional_options
 
 log = logging.getLogger(__name__)
 
@@ -111,7 +112,7 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
         return None, None
 
 
-@click_additional_options
+@click_helper.extend
 @click.option(
     "--proxy-protocol",
     help="Enable Proxy Protocol (v1), and expect all incoming packets to have this header "

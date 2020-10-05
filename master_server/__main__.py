@@ -1,27 +1,17 @@
 import click
 import logging
 
+from openttd_helpers import click_helper
+from openttd_helpers.logging_helper import click_logging
+from openttd_helpers.sentry_helper import click_sentry
+
 from .database.dynamodb import click_database_dynamodb
-from .helpers.click import (
-    click_additional_options,
-    import_module,
-)
-from .helpers.sentry import click_sentry
 from .openttd.udp import click_proxy_protocol
 
 log = logging.getLogger(__name__)
 
-CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
-
-@click_additional_options
-def click_logging():
-    logging.basicConfig(
-        format="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S", level=logging.INFO
-    )
-
-
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click_helper.command()
 @click_logging  # Should always be on top, as it initializes the logging
 @click_sentry
 @click.option(
@@ -33,13 +23,13 @@ def click_logging():
     "--app",
     type=click.Choice(["master_server", "web_api"], case_sensitive=False),
     required=True,
-    callback=import_module("master_server.application", "Application"),
+    callback=click_helper.import_module("master_server.application", "Application"),
 )
 @click.option(
     "--db",
     type=click.Choice(["dynamodb"], case_sensitive=False),
     required=True,
-    callback=import_module("master_server.database", "Database"),
+    callback=click_helper.import_module("master_server.database", "Database"),
 )
 @click_database_dynamodb
 @click_proxy_protocol
