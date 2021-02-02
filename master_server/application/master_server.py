@@ -24,6 +24,12 @@ SERVERS_CACHE_EXPIRE = 30
 # How many seconds between stale-checks.
 TIME_BETWEEN_STALE_CHECK = 60 * 5
 
+# List of words that result in your server not being listed.
+# This to counter server-owners who use our server-listing as advertisement
+# platform. Yes. This was really happening.
+BLACKLISTED_SERVER_NAMES = [
+]
+
 
 @routes.get("/healthz")
 async def healthz_handler(request):
@@ -186,9 +192,19 @@ class Application(Common):
             return
         session_key, register_addr = response
 
-        # This server can now be marked as online.
-        if not self.database.server_online(session_key, source.ip, source.port, info):
-            return
+        # If the server-name is blacklisted, don't mark it as online but send
+        # an ack to the server acting as if we did mark it online. This makes
+        # it invisible for the server it is not listed.
+        # And yes, this was sadly enough needed, as some server-owners decided
+        # to use our server-listing as advertisement platform.
+        server_name = info["server_name"].lower()
+        for blacklisted_server_name in BLACKLISTED_SERVER_NAMES:
+            if blacklisted_server_name in server_name:
+                break
+        else:
+            # This server can now be marked as online.
+            if not self.database.server_online(session_key, source.ip, source.port, info):
+                return
 
         # Inform the server that he is now registered.
         source.protocol.send_PACKET_UDP_MASTER_ACK_REGISTER(register_addr)
