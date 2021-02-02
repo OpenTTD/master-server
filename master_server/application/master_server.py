@@ -28,6 +28,7 @@ TIME_BETWEEN_STALE_CHECK = 60 * 5
 # This to counter server-owners who use our server-listing as advertisement
 # platform. Yes. This was really happening.
 BLACKLISTED_SERVER_NAMES = [
+    "elitegameservers.net",
 ]
 
 
