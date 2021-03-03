@@ -98,7 +98,7 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
     def send_packet(self, socket_addr, data, new_connection=False):
         if self.socks_proxy and new_connection:
             # Modify the packet to have a SOCKS header with relay information.
-            data = self._socks_conn.prepare_udp_connection(socket_addr[0], socket_addr[1], data)
+            data = self._socks_conn.udp_prepare_connection(socket_addr[0], socket_addr[1], data)
 
             response = asyncio.Future()
             protocol = SocksProtocol(data, response.set_result)
