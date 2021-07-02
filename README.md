@@ -1,10 +1,10 @@
 # Master Server
 
-[![GitHub License](https://img.shields.io/github/license/OpenTTD/master-server)](https://github.com/OpenTTD/master-server/blob/master/LICENSE)
+[![GitHub License](https://img.shields.io/github/license/OpenTTD/master-server)](https://github.com/OpenTTD/master-server/blob/main/LICENSE)
 [![GitHub Tag](https://img.shields.io/github/v/tag/OpenTTD/master-server?include_prereleases&label=stable)](https://github.com/OpenTTD/master-server/releases)
-[![GitHub commits since latest release](https://img.shields.io/github/commits-since/OpenTTD/master-server/latest/master)](https://github.com/OpenTTD/master-server/commits/master)
+[![GitHub commits since latest release](https://img.shields.io/github/commits-since/OpenTTD/master-server/latest/main)](https://github.com/OpenTTD/master-server/commits/main)
 
-[![GitHub Workflow Status (Testing)](https://img.shields.io/github/workflow/status/OpenTTD/master-server/Testing/master?label=master)](https://github.com/OpenTTD/master-server/actions?query=workflow%3ATesting)
+[![GitHub Workflow Status (Testing)](https://img.shields.io/github/workflow/status/OpenTTD/master-server/Testing/main?label=main)](https://github.com/OpenTTD/master-server/actions?query=workflow%3ATesting)
 [![GitHub Workflow Status (Publish Image)](https://img.shields.io/github/workflow/status/OpenTTD/master-server/Publish%20image?label=publish)](https://github.com/OpenTTD/master-server/actions?query=workflow%3A%22Publish+image%22)
 [![GitHub Workflow Status (Deployments)](https://img.shields.io/github/workflow/status/OpenTTD/master-server/Deployment?label=deployment)](https://github.com/OpenTTD/master-server/actions?query=workflow%3A%22Deployment%22)
 
