@@ -108,7 +108,7 @@ class Application(Common):
                 log.exception("Exception during check on stale servers")
                 return
 
-    def _get_next_session_key(self):
+    async def _get_next_session_key(self):
         #           |63      56       48       40       32       24       16       8       0|
         #           |--------|--------|--------|--------|--------|--------|--------|--------|
         # Version 1 |     unused      |      port       |                ip                 |
@@ -128,24 +128,24 @@ class Application(Common):
         # and token.
         session_key = (int(time.time()) << 24) | (self._session_counter << 8)
 
-        self.database.store_session_key_token(session_key, token)
+        await self.database.store_session_key_token(session_key, token)
         return session_key, token
 
-    def receive_PACKET_UDP_SERVER_REGISTER(self, source, port, session_key):
+    async def receive_PACKET_UDP_SERVER_REGISTER(self, source, port, session_key):
         # session_key of None means it was version 1.
         if session_key is None:
             # To be able to use session-keys as an unique ID, also
             # generate a session-key for version 1, but based on
             # static information of the server.
             session_key = int(source.ip) | (port << 32)
-            self.database.store_session_key_token(session_key, 0)
+            await self.database.store_session_key_token(session_key, 0)
         elif session_key == 0:
             # Session-keys were introduced in version 2.
             # This session-key tracks the same server over multiple IPs.
             # On first contact with the Master Server, a session-key is send
             # back to the server. This session-key is reused for any further
             # announcement, also on other IPs.
-            session_key, token = self._get_next_session_key()
+            session_key, token = await self._get_next_session_key()
             source.protocol.send_PACKET_UDP_MASTER_SESSION_KEY(source.addr, session_key | token)
 
             # We don't query the server for now; we first let the server
@@ -158,7 +158,7 @@ class Application(Common):
             token = session_key & 0xFF
             session_key = (session_key >> 8) << 8
 
-            if not self.database.check_session_key_token(session_key, token):
+            if not await self.database.check_session_key_token(session_key, token):
                 log.info("Invalid session-key token from %s:%d; transmitting new session-key", source.ip, source.port)
 
                 # TODO -- If an IP has this wrong for more than 3 times, it is
@@ -166,7 +166,7 @@ class Application(Common):
 
                 # Send the server a new session-key, as clearly he got a bit
                 # confused.
-                session_key, token = self._get_next_session_key()
+                session_key, token = await self._get_next_session_key()
                 source.protocol.send_PACKET_UDP_MASTER_SESSION_KEY(source.addr, session_key | token)
                 return
 
@@ -187,7 +187,7 @@ class Application(Common):
         #  server UDP port).
         self.query_server(source.ip, port, source.protocol, user_data=(session_key, source.addr))
 
-    def receive_PACKET_UDP_SERVER_RESPONSE(self, source, **info):
+    async def receive_PACKET_UDP_SERVER_RESPONSE(self, source, **info):
         response = self.query_server_response(source.ip, source.port)
         if response is None:
             return
@@ -204,19 +204,19 @@ class Application(Common):
                 break
         else:
             # This server can now be marked as online.
-            if not self.database.server_online(session_key, source.ip, source.port, info):
+            if not await self.database.server_online(session_key, source.ip, source.port, info):
                 return
 
         # Inform the server that he is now registered.
         source.protocol.send_PACKET_UDP_MASTER_ACK_REGISTER(register_addr)
 
-    def receive_PACKET_UDP_SERVER_UNREGISTER(self, source, port):
-        self.database.server_offline(source.ip, port)
+    async def receive_PACKET_UDP_SERVER_UNREGISTER(self, source, port):
+        await self.database.server_offline(source.ip, port)
 
-    def receive_PACKET_UDP_CLIENT_GET_LIST(self, source, slt):
+    async def receive_PACKET_UDP_CLIENT_GET_LIST(self, source, slt):
         # Fetching all the servers is pretty expensive, so rate limit how often we do this.
         if self._servers_cache[slt] is None or time.time() > self._servers_cache[slt]["expire"]:
-            servers = self.database.get_server_list_for_client(slt == SLTType.SLT_IPv6)
+            servers = await self.database.get_server_list_for_client(slt == SLTType.SLT_IPv6)
 
             self._servers_cache[slt] = {
                 "servers": servers,

@@ -1,4 +1,5 @@
 aiohttp==3.7.4.post0
+aioredis==2.0.0a1
 async-timeout==3.0.1
 attrs==21.2.0
 botocore==1.20.103
@@ -6,6 +7,7 @@ certifi==2021.5.30
 chardet==4.0.0
 click==8.0.1
 docutils==0.17.1
+hiredis==2.0.0
 idna==3.2
 jmespath==0.10.0
 multidict==5.1.0
