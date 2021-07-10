@@ -63,6 +63,7 @@ class Database(DatabaseInterface):
         await self._redis.set(f"ms-server-id:{session_key}", server_id, ex=TTL)
 
         info["game_type"] = 1  # Public
+        info["connection_type"] = 2  # Direct-IP
 
         # Update the information of this server.
         info_str = json.dumps(info)
@@ -124,8 +125,14 @@ class Database(DatabaseInterface):
         if info_str is None:
             return None
 
+        info = json.loads(info_str)
+        if info["game_type"] != 1:  # List only GameType.PUBLIC servers.
+            return None
+        if info["connection_type"] == 1:  # Do not list ConnectionType.ISOLATED servers.
+            return None
+
         entry = {
-            "info": json.loads(info_str),
+            "info": info,
             "online": True,
         }
 
@@ -156,7 +163,8 @@ class Database(DatabaseInterface):
         for server_key in servers:
             _, _, server_id = server_key.partition(":")
             entry = await self.get_server_info_for_web(server_id)
-            server_list.append(entry)
+            if entry is not None:
+                server_list.append(entry)
 
         return server_list
 
