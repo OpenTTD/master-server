@@ -109,6 +109,9 @@ class Database(DatabaseInterface):
 
     async def get_server_info_for_web(self, server_id):
         info_str = await self._redis.get(f"gc-server:{server_id}")
+        if info_str is None:
+            return None
+
         entry = {
             "info": json.loads(info_str),
             "online": True,
