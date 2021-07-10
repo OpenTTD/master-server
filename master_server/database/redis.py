@@ -55,22 +55,29 @@ class Database(DatabaseInterface):
         # server_offline() doesn't get the session_key, so we need a reverse lookup.
         await self._redis.set(f"ms-session-id:{server_ip}:{server_port}", session_key, ex=TTL)
 
+        # Create a server-id based on the first ip/port we see of this server.
+        # This means the server-id remains mostly stable between restarts.
+        server_id = await self._redis.get(f"ms-server-id:{session_key}")
+        if server_id is None:
+            server_id = _get_server_id(server_ip, server_port)
+        await self._redis.set(f"ms-server-id:{session_key}", server_id, ex=TTL)
+
         info["game_type"] = 1  # Public
 
         # Update the information of this server.
         info_str = json.dumps(info)
-        await self._redis.set(f"gc-server:{session_key}", info_str, ex=TTL)
-        await self._redis.xadd("gc-stream", {"gc-id": -1, "update": session_key, "info": info_str}, approximate=1000)
+        await self._redis.set(f"gc-server:{server_id}", info_str, ex=TTL)
+        await self._redis.xadd("gc-stream", {"gc-id": -1, "update": server_id, "info": info_str}, approximate=1000)
 
-        # Track this IP based on the session_key.
+        # Track this IP based on the server_id.
         if isinstance(server_ip, ipaddress.IPv6Address):
             type = "ipv6"
         else:
             type = "ipv4"
         server_str = json.dumps({"ip": str(server_ip), "port": server_port})
-        if await self._redis.set(f"gc-direct-{type}:{session_key}", server_str, ex=TTL) > 0:
+        if await self._redis.set(f"gc-direct-{type}:{server_id}", server_str, ex=TTL) > 0:
             await self._redis.xadd(
-                "gc-stream", {"gc-id": -1, f"new-direct-{type}": session_key, "server": server_str}, approximate=1000
+                "gc-stream", {"gc-id": -1, f"new-direct-{type}": server_id, "server": server_str}, approximate=1000
             )
 
         return True
@@ -82,12 +89,17 @@ class Database(DatabaseInterface):
             return
         await self._redis.delete(f"ms-session-id:{server_ip}:{server_port}")
 
-        await self._redis.delete(f"gc-direct-ipv4:{session_key}")
-        await self._redis.delete(f"gc-direct-ipv6:{session_key}")
+        server_id = await self._redis.get(f"ms-server-id:{session_key}")
+        if server_id is None:
+            return
+        await self._redis.delete(f"ms-server-id:{session_key}")
+
+        await self._redis.delete(f"gc-direct-ipv4:{server_id}")
+        await self._redis.delete(f"gc-direct-ipv6:{server_id}")
 
         # Delete this server.
-        if await self._redis.delete(f"gc-server:{session_key}") > 0:
-            await self._redis.xadd("gc-stream", {"gc-id": -1, "delete": session_key}, approximate=1000)
+        if await self._redis.delete(f"gc-server:{server_id}") > 0:
+            await self._redis.xadd("gc-stream", {"gc-id": -1, "delete": server_id}, approximate=1000)
 
     async def get_server_list_for_client(self, ipv6_list):
         if ipv6_list:
@@ -120,7 +132,7 @@ class Database(DatabaseInterface):
             entry["ipv4"] = {
                 "ip": direct_ipv4["ip"],
                 "port": direct_ipv4["port"],
-                "server_id": _get_server_id(direct_ipv4["ip"], direct_ipv4["port"]),
+                "server_id": server_id,
             }
 
         direct_ipv6_str = await self._redis.get(f"gc-direct-ipv6:{server_id}")
@@ -129,7 +141,7 @@ class Database(DatabaseInterface):
             entry["ipv6"] = {
                 "ip": direct_ipv6["ip"],
                 "port": direct_ipv6["port"],
-                "server_id": direct_ipv6(direct_ipv4["ip"], direct_ipv6["port"]),
+                "server_id": server_id,
             }
 
         return entry
