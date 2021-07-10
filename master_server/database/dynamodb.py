@@ -61,13 +61,13 @@ def _convert_server_to_dict(server):
         }
 
     for name, _ in getmembers(InfoMap, lambda o: isinstance(o, Attribute)):
-        if name == "grfs":
-            entry["info"]["grfs"] = [
+        if name == "newgrfs":
+            entry["info"]["newgrfs"] = [
                 {
-                    "grfid": grf["grfid"],
-                    "md5sum": grf["md5sum"].hex(),
+                    "grfid": newgrf["grfid"],
+                    "md5sum": newgrf["md5sum"].hex(),
                 }
-                for grf in getattr(server.info, name)
+                for newgrf in getattr(server.info, name)
             ]
         else:
             entry["info"][name] = getattr(server.info, name)
@@ -133,7 +133,7 @@ class Database(DatabaseInterface):
             return False
 
         # Don't accept servers with empty revision or name.
-        if info["server_revision"] == "" or info["server_name"] == "":
+        if info["openttd_version"] == "" or info["name"] == "":
             return False
 
         # Update the server information.
