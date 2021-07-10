@@ -133,7 +133,7 @@ class Database(DatabaseInterface):
 
         entry = {
             "info": info,
-            "online": True,
+            "server_id": server_id,
         }
 
         direct_ipv4_str = await self._redis.get(f"gc-direct-ipv4:{server_id}")
@@ -142,7 +142,6 @@ class Database(DatabaseInterface):
             entry["ipv4"] = {
                 "ip": direct_ipv4["ip"],
                 "port": direct_ipv4["port"],
-                "server_id": server_id,
             }
 
         direct_ipv6_str = await self._redis.get(f"gc-direct-ipv6:{server_id}")
@@ -151,7 +150,6 @@ class Database(DatabaseInterface):
             entry["ipv6"] = {
                 "ip": direct_ipv6["ip"],
                 "port": direct_ipv6["port"],
-                "server_id": server_id,
             }
 
         return entry
