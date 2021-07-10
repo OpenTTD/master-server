@@ -42,23 +42,23 @@ def _get_server_id(server_ip, server_port):
 def _convert_server_to_dict(server):
     entry = {
         "info": {},
-        "time_first_seen": server.time_first_seen,
-        "time_last_seen": server.time_last_seen,
-        "online": server.online,
     }
 
     if server.ipv4:
         entry["ipv4"] = {
             "ip": str(server.ipv4.ip),
             "port": server.ipv4.port,
-            "server_id": _get_server_id(server.ipv4.ip, server.ipv4.port),
         }
+        entry["server_id"] = _get_server_id(server.ipv4.ip, server.ipv4.port)
+
     if server.ipv6:
         entry["ipv6"] = {
             "ip": str(server.ipv6.ip),
             "port": server.ipv6.port,
-            "server_id": _get_server_id(server.ipv6.ip, server.ipv6.port),
         }
+        # Make sure the IPv4 variant always wins.
+        if "server_id" not in entry:
+            entry["server_id"] = _get_server_id(server.ipv6.ip, server.ipv6.port)
 
     for name, _ in getmembers(InfoMap, lambda o: isinstance(o, Attribute)):
         if name == "newgrfs":
