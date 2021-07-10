@@ -77,6 +77,12 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
 
         return source, data
 
+    async def guard(self, coro):
+        try:
+            await coro
+        except Exception:
+            log.exception("Error while processing packet")
+
     def datagram_received(self, data, socket_addr):
         try:
             source, data = self._detect_source_ip_port(socket_addr, data)
@@ -90,7 +96,7 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
             log.info("Dropping invalid packet from %r: %r", socket_addr, err)
             return
 
-        getattr(self._callback, f"receive_{type.name}")(source, **kwargs)
+        asyncio.create_task(self.guard(getattr(self._callback, f"receive_{type.name}")(source, **kwargs)))
 
     def error_received(self, exc):
         print("error on socket: ", exc)

@@ -40,7 +40,7 @@ async def healthz_handler(request):
 async def server_list(request):
     if request.app.server_list_cache is None or time.time() > request.app.server_list_cache["expire"]:
         request.app.server_list_cache = {
-            "servers": request.app.database.get_server_list_for_web(),
+            "servers": await request.app.database.get_server_list_for_web(),
             "expire": time.time() + TIME_SERVER_LIST_CACHE,
         }
 
@@ -57,7 +57,7 @@ async def server_entry(request):
         or time.time() > request.app.server_entry_cache[server_id]["expire"]
     ):
         request.app.server_entry_cache[server_id] = {
-            "server": request.app.database.get_server_info_for_web(server_id),
+            "server": await request.app.database.get_server_info_for_web(server_id),
             "expire": time.time() + TIME_SERVER_ENTRY_CACHE,
         }
 

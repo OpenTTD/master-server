@@ -112,18 +112,18 @@ class Database(DatabaseInterface):
             if not model.exists():
                 model.create_table(wait=True)
 
-    def check_session_key_token(self, session_key, token):
+    async def check_session_key_token(self, session_key, token):
         try:
             server = Server.get(session_key)
         except Server.DoesNotExist:
             return False
         return server.token == token
 
-    def store_session_key_token(self, session_key, token):
+    async def store_session_key_token(self, session_key, token):
         server = Server(session_key, token=token, ttl=timedelta(seconds=TTL))
         server.save()
 
-    def server_online(self, session_key, server_ip, server_port, info):
+    async def server_online(self, session_key, server_ip, server_port, info):
         server_id = _get_server_id(server_ip, server_port)
         self._update_ip_port(server_id, session_key)
 
@@ -164,7 +164,7 @@ class Database(DatabaseInterface):
 
         return True
 
-    def server_offline(self, server_ip, server_port):
+    async def server_offline(self, server_ip, server_port):
         server_id = _get_server_id(server_ip, server_port)
 
         # Lookup the session-key based on the ip/port.
@@ -189,7 +189,7 @@ class Database(DatabaseInterface):
             ]
         )
 
-    def get_server_list_for_client(self, ipv6_list):
+    async def get_server_list_for_client(self, ipv6_list):
         server_list = []
 
         for ip_port in IpPort.online_view.query(True):
@@ -205,7 +205,7 @@ class Database(DatabaseInterface):
 
         return server_list
 
-    def get_server_info_for_web(self, server_id):
+    async def get_server_info_for_web(self, server_id):
         try:
             ip_port = IpPort.get(server_id)
         except IpPort.DoesNotExist:
@@ -218,7 +218,7 @@ class Database(DatabaseInterface):
 
         return _convert_server_to_dict(server)
 
-    def get_server_list_for_web(self):
+    async def get_server_list_for_web(self):
         return [_convert_server_to_dict(server) for server in Server.online_view.query(True)]
 
     def check_stale_servers(self):

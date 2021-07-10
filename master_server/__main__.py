@@ -6,6 +6,7 @@ from openttd_helpers.logging_helper import click_logging
 from openttd_helpers.sentry_helper import click_sentry
 
 from .database.dynamodb import click_database_dynamodb
+from .database.redis import click_database_redis
 from .openttd.udp import click_proxy_protocol
 
 log = logging.getLogger(__name__)
@@ -27,11 +28,12 @@ log = logging.getLogger(__name__)
 )
 @click.option(
     "--db",
-    type=click.Choice(["dynamodb"], case_sensitive=False),
+    type=click.Choice(["dynamodb", "redis"], case_sensitive=False),
     required=True,
     callback=click_helper.import_module("master_server.database", "Database"),
 )
 @click_database_dynamodb
+@click_database_redis
 @click_proxy_protocol
 def main(bind, msu_port, web_port, app, db):
     database = db()
