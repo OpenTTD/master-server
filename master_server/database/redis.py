@@ -140,7 +140,7 @@ class Database(DatabaseInterface):
         servers = await self._redis.keys("gc-server:*")
         for server_key in servers:
             _, _, server_id = server_key.partition(":")
-            entry = self.get_server_info_for_web(server_id)
+            entry = await self.get_server_info_for_web(server_id)
             server_list.append(entry)
 
         return server_list
