@@ -35,25 +35,22 @@ class GrfMap(MapAttribute):
 
 
 class InfoMap(MapAttribute):
-    num_grfs = NumberAttribute()
-    grfs = ListAttribute(of=GrfMap)
+    newgrfs = ListAttribute(of=GrfMap)
     game_date = NumberAttribute()
     start_date = NumberAttribute()
     companies_max = NumberAttribute()
     companies_on = NumberAttribute()
     spectators_max = NumberAttribute()
-    server_name = UnicodeAttribute()
-    server_revision = UnicodeAttribute()
-    server_lang = NumberAttribute()
+    name = UnicodeAttribute()
+    openttd_version = UnicodeAttribute()
     use_password = NumberAttribute()
     clients_max = NumberAttribute()
     clients_on = NumberAttribute()
     spectators_on = NumberAttribute()
-    map_name = UnicodeAttribute(null=True)
     map_width = NumberAttribute()
     map_height = NumberAttribute()
-    map_set = NumberAttribute()
-    dedicated = NumberAttribute()
+    map_type = NumberAttribute()
+    is_dedicated = NumberAttribute()
 
     def __repr__(self):
         return str(vars(self))

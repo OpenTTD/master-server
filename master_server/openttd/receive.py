@@ -104,37 +104,34 @@ class OpenTTDProtocolReceive:
         payload = {
             name: None
             for name in [
-                "num_grfs",
-                "grfs",
+                "newgrfs",
                 "game_date",
                 "start_date",
                 "companies_max",
                 "companies_on",
                 "spectators_max",
-                "server_name",
-                "server_revision",
-                "server_lang",
+                "name",
+                "openttd_version",
                 "use_password",
                 "clients_max",
                 "clients_on",
                 "spectators_on",
-                "map_name",
                 "map_width",
                 "map_height",
-                "map_set",
-                "dedicated",
+                "map_type",
+                "is_dedicated",
             ]
         }
 
         game_info_version, data = read_uint8(data)
 
         if game_info_version >= 4:
-            payload["num_grfs"], data = read_uint8(data)
-            payload["grfs"] = []
-            for _ in range(payload["num_grfs"]):
+            newgrf_count, data = read_uint8(data)
+            payload["newgrfs"] = []
+            for _ in range(newgrf_count):
                 grfid, data = read_uint32(data)
                 md5sum, data = read_bytes(data, 16)
-                payload["grfs"].append({"grfid": grfid, "md5sum": md5sum})
+                payload["newgrfs"].append({"grfid": grfid, "md5sum": md5sum})
 
         if game_info_version >= 3:
             payload["game_date"], data = read_uint32(data)
@@ -146,9 +143,9 @@ class OpenTTDProtocolReceive:
             payload["spectators_max"], data = read_uint8(data)
 
         if game_info_version >= 1:
-            payload["server_name"], data = read_string(data)
-            payload["server_revision"], data = read_string(data)
-            payload["server_lang"], data = read_uint8(data)
+            payload["name"], data = read_string(data)
+            payload["openttd_version"], data = read_string(data)
+            _, data = read_uint8(data)  # Unused, used to be server-lang
             payload["use_password"], data = read_uint8(data)
             payload["clients_max"], data = read_uint8(data)
             payload["clients_on"], data = read_uint8(data)
@@ -158,11 +155,11 @@ class OpenTTDProtocolReceive:
                 payload["game_date"] += DAYS_TILL_ORIGINAL_BASE_YEAR
                 payload["start_date"], data = read_uint16(data)
                 payload["start_date"] += DAYS_TILL_ORIGINAL_BASE_YEAR
-            payload["map_name"], data = read_string(data)
+            _, data = read_string(data)  # Unused, used to be map-name
             payload["map_width"], data = read_uint16(data)
             payload["map_height"], data = read_uint16(data)
-            payload["map_set"], data = read_uint8(data)
-            payload["dedicated"], data = read_uint8(data)
+            payload["map_type"], data = read_uint8(data)
+            payload["is_dedicated"], data = read_uint8(data)
 
         if len(data) != 0:
             raise PacketInvalidData("more bytes than expected")

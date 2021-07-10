@@ -198,7 +198,7 @@ class Application(Common):
         # it invisible for the server it is not listed.
         # And yes, this was sadly enough needed, as some server-owners decided
         # to use our server-listing as advertisement platform.
-        server_name = info["server_name"].lower()
+        server_name = info["name"].lower()
         for blacklisted_server_name in BLACKLISTED_SERVER_NAMES:
             if blacklisted_server_name in server_name:
                 break
