@@ -33,6 +33,11 @@ class Database(DatabaseInterface):
     def __init__(self):
         self._redis = aioredis.from_url(_redis_url, decode_responses=True)
 
+    async def add_to_stream(self, entry_type, payload):
+        await self._redis.xadd(
+            "gc-stream", {"gc-id": -1, "type": entry_type, "payload": json.dumps(payload)}, approximate=1000
+        )
+
     async def check_session_key_token(self, session_key, token):
         ms_token = await self._redis.get(f"ms-session-key:{session_key}")
         if ms_token is None:
@@ -66,19 +71,23 @@ class Database(DatabaseInterface):
         info["connection_type"] = 2  # Direct-IP
 
         # Update the information of this server.
-        info_str = json.dumps(info)
-        await self._redis.set(f"gc-server:{server_id}", info_str, ex=TTL)
-        await self._redis.xadd("gc-stream", {"gc-id": -1, "update": server_id, "info": info_str}, approximate=1000)
+        await self._redis.set(f"gc-server:{server_id}", json.dumps(info), ex=TTL)
+        await self.add_to_stream("update", {"server_id": server_id, "info": info})
 
         # Track this IP based on the server_id.
-        if isinstance(server_ip, ipaddress.IPv6Address):
-            type = "ipv6"
-        else:
-            type = "ipv4"
-        server_str = json.dumps({"ip": str(server_ip), "port": server_port})
-        if await self._redis.set(f"gc-direct-{type}:{server_id}", server_str, ex=TTL) > 0:
-            await self._redis.xadd(
-                "gc-stream", {"gc-id": -1, f"new-direct-{type}": server_id, "server": server_str}, approximate=1000
+        type = "ipv6" if isinstance(server_ip, ipaddress.IPv6Address) else "ipv4"
+        res = await self._redis.set(
+            f"gc-direct-{type}:{server_id}", json.dumps({"ip": str(server_ip), "port": server_port}), ex=TTL
+        )
+        if res > 0:
+            await self.add_to_stream(
+                "new-direct-ip",
+                {
+                    "server_id": server_id,
+                    "type": type,
+                    "ip": str(server_ip),
+                    "port": server_port,
+                },
             )
 
         return True
@@ -100,7 +109,7 @@ class Database(DatabaseInterface):
 
         # Delete this server.
         if await self._redis.delete(f"gc-server:{server_id}") > 0:
-            await self._redis.xadd("gc-stream", {"gc-id": -1, "delete": server_id}, approximate=1000)
+            await self.add_to_stream("delete", {"server_id": server_id})
 
     async def get_server_list_for_client(self, ipv6_list):
         if ipv6_list:
