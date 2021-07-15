@@ -25,10 +25,18 @@ class JSONException(web.HTTPException):
 
 
 def in_path_server_id(server_id):
-    if len(server_id) != 32 or any([u not in ("abcdef1234567890") for u in server_id]):
-        raise JSONException({"message": "server_id is invalid"})
+    if len(server_id) == 32 and all([u in ("abcdef1234567890") for u in server_id]):
+        return server_id
+    if (
+        server_id
+        and server_id[0] == "+"
+        and len(server_id) >= 7
+        and len(server_id) <= 9
+        and all([u in ("abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNQRSTUVWXYZ23456789") for u in server_id[1:]])
+    ):
+        return server_id
 
-    return server_id
+    raise JSONException({"message": "server_id is invalid"})
 
 
 @routes.get("/healthz")
