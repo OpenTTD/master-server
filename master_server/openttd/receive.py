@@ -104,6 +104,8 @@ class OpenTTDProtocolReceive:
         payload = {
             name: None
             for name in [
+                "gamescript_version",
+                "gamescript_name",
                 "newgrfs",
                 "game_date",
                 "start_date",
