@@ -35,7 +35,7 @@ class Database(DatabaseInterface):
 
     async def add_to_stream(self, entry_type, payload):
         await self._redis.xadd(
-            "gc-stream", {"gc-id": -1, "type": entry_type, "payload": json.dumps(payload)}, approximate=1000
+            "gc-stream", {"gc-id": -1, "type": entry_type, "payload": json.dumps(payload)}, maxlen=1000
         )
 
     async def check_session_key_token(self, session_key, token):
