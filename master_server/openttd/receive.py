@@ -133,7 +133,7 @@ class OpenTTDProtocolReceive:
             for _ in range(newgrf_count):
                 grfid, data = read_uint32(data)
                 md5sum, data = read_bytes(data, 16)
-                payload["newgrfs"].append({"grfid": grfid, "md5sum": md5sum.hex()})
+                payload["newgrfs"].append({"grfid": grfid, "md5sum": md5sum.hex(), "name": None})
 
         if game_info_version >= 3:
             payload["game_date"], data = read_uint32(data)
