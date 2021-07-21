@@ -117,10 +117,11 @@ class Database(DatabaseInterface):
 
         # Track this IP based on the server_id.
         type = "ipv6" if isinstance(server_ip, ipaddress.IPv6Address) else "ipv4"
-        res = await self._redis.set(
-            f"gc-direct-{type}:{server_id}", json.dumps({"ip": str(server_ip), "port": server_port}), ex=TTL_SERVER
-        )
-        if res > 0:
+        res = await self._redis.expire(f"gc-direct-{type}:{server_id}", TTL_SERVER)
+        if res == 0:
+            await self._redis.set(
+                f"gc-direct-{type}:{server_id}", json.dumps({"ip": str(server_ip), "port": server_port}), ex=TTL_SERVER
+            )
             await self.add_to_stream(
                 "new-direct-ip",
                 {
