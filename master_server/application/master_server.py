@@ -86,7 +86,7 @@ class Application(Common):
         webapp = web.Application()
         webapp.add_routes(routes)
 
-        web.run_app(webapp, host=bind, port=web_port, access_log_class=ErrorOnlyAccessLogger)
+        web.run_app(webapp, host=bind, port=web_port, access_log_class=ErrorOnlyAccessLogger, loop=loop)
 
         log.info("Shutting down master server ...")
 
