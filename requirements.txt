@@ -13,7 +13,7 @@ frozenlist==1.3.0
 hiredis==2.0.0
 idna==3.3
 jmespath==0.10.0
-multidict==5.2.0
+multidict==6.0.2
 openttd-helpers==1.0.1
 pproxy==2.7.8
 pynamodb==5.1.0
