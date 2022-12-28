@@ -4,9 +4,9 @@
 [![GitHub Tag](https://img.shields.io/github/v/tag/OpenTTD/master-server?include_prereleases&label=stable)](https://github.com/OpenTTD/master-server/releases)
 [![GitHub commits since latest release](https://img.shields.io/github/commits-since/OpenTTD/master-server/latest/main)](https://github.com/OpenTTD/master-server/commits/main)
 
-[![GitHub Workflow Status (Testing)](https://img.shields.io/github/workflow/status/OpenTTD/master-server/Testing/main?label=main)](https://github.com/OpenTTD/master-server/actions?query=workflow%3ATesting)
-[![GitHub Workflow Status (Publish Image)](https://img.shields.io/github/workflow/status/OpenTTD/master-server/Publish%20image?label=publish)](https://github.com/OpenTTD/master-server/actions?query=workflow%3A%22Publish+image%22)
-[![GitHub Workflow Status (Deployments)](https://img.shields.io/github/workflow/status/OpenTTD/master-server/Deployment?label=deployment)](https://github.com/OpenTTD/master-server/actions?query=workflow%3A%22Deployment%22)
+[![GitHub Workflow Status (Testing)](https://img.shields.io/github/actions/workflow/status/OpenTTD/master-server/testing.yml?branch=main&label=main)](https://github.com/OpenTTD/master-server/actions/workflows/testing.yml)
+[![GitHub Workflow Status (Publish Image)](https://img.shields.io/github/actions/workflow/status/OpenTTD/master-server/publish.yml?label=publish)](https://github.com/OpenTTD/master-server/actions/workflows/publish.yml)
+[![GitHub Workflow Status (Deployments)](https://img.shields.io/github/actions/workflow/status/OpenTTD/master-server/deployment.yml?label=deployment)](https://github.com/OpenTTD/master-server/actions/workflows/deployment.yml)
 
 [![GitHub deployments (Staging)](https://img.shields.io/github/deployments/OpenTTD/master-server/staging?label=staging)](https://github.com/OpenTTD/master-server/deployments)
 [![GitHub deployments (Production)](https://img.shields.io/github/deployments/OpenTTD/master-server/production?label=production)](https://github.com/OpenTTD/master-server/deployments)
