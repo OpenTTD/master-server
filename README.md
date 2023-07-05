@@ -1,20 +1,11 @@
 # Master Server
 
 [![GitHub License](https://img.shields.io/github/license/OpenTTD/master-server)](https://github.com/OpenTTD/master-server/blob/main/LICENSE)
-[![GitHub Tag](https://img.shields.io/github/v/tag/OpenTTD/master-server?include_prereleases&label=stable)](https://github.com/OpenTTD/master-server/releases)
-[![GitHub commits since latest release](https://img.shields.io/github/commits-since/OpenTTD/master-server/latest/main)](https://github.com/OpenTTD/master-server/commits/main)
-
-[![GitHub Workflow Status (Testing)](https://img.shields.io/github/actions/workflow/status/OpenTTD/master-server/testing.yml?branch=main&label=main)](https://github.com/OpenTTD/master-server/actions/workflows/testing.yml)
-[![GitHub Workflow Status (Publish Image)](https://img.shields.io/github/actions/workflow/status/OpenTTD/master-server/publish.yml?label=publish)](https://github.com/OpenTTD/master-server/actions/workflows/publish.yml)
-[![GitHub Workflow Status (Deployments)](https://img.shields.io/github/actions/workflow/status/OpenTTD/master-server/deployment.yml?label=deployment)](https://github.com/OpenTTD/master-server/actions/workflows/deployment.yml)
-
-[![GitHub deployments (Staging)](https://img.shields.io/github/deployments/OpenTTD/master-server/staging?label=staging)](https://github.com/OpenTTD/master-server/deployments)
-[![GitHub deployments (Production)](https://img.shields.io/github/deployments/OpenTTD/master-server/production?label=production)](https://github.com/OpenTTD/master-server/deployments)
 
 This repository contains two components to have a functional Master Server for the OpenTTD clients.
 
-1) a `master_server` component, which runs the actual Master Server and communicates with the OpenTTD clients.
-2) a `web_api` component, which allows HTTP access to the current online servers known by the Master Server.
+1. a `master_server` component, which runs the actual Master Server and communicates with the OpenTTD clients.
+2. a `web_api` component, which allows HTTP access to the current online servers known by the Master Server.
 
 These are in a single repository, as they share the same database access.
 
