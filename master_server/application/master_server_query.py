@@ -34,7 +34,7 @@ class Common:
                     transport, _ = await request
                     try:
                         data = await response
-                        protocol.datagram_received(data, server_addr)
+                        protocol.datagram_received(data, server_addr, is_socks=True)
                     finally:
                         transport.close()
 

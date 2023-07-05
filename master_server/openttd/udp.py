@@ -49,8 +49,8 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
         else:
             self.is_ipv6 = False
 
-    def _detect_source_ip_port(self, socket_addr, data):
-        if not self.proxy_protocol or self.socks_proxy:
+    def _detect_source_ip_port(self, socket_addr, data, is_socks=False):
+        if not self.proxy_protocol or is_socks:
             source = Source(self, socket_addr, socket_addr[0], socket_addr[1])
             return source, data
 
@@ -81,9 +81,9 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
         except Exception:
             log.exception("Error while processing packet")
 
-    def datagram_received(self, data, socket_addr):
+    def datagram_received(self, data, socket_addr, is_socks=False):
         try:
-            source, data = self._detect_source_ip_port(socket_addr, data)
+            source, data = self._detect_source_ip_port(socket_addr, data, is_socks=is_socks)
         except Exception as err:
             log.exception("Error detecting PROXY protocol %r: %r", socket_addr, err)
             return
