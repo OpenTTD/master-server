@@ -50,9 +50,7 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
             self.is_ipv6 = False
 
     def _detect_source_ip_port(self, socket_addr, data):
-        # Either proxy protocol is not enabled, or the packet is not from a
-        # local source.
-        if not self.proxy_protocol or not socket_addr[0].startswith("10."):
+        if not self.proxy_protocol:
             source = Source(self, socket_addr, socket_addr[0], socket_addr[1])
             return source, data
 
@@ -93,7 +91,7 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
         try:
             type, kwargs = self.receive_packet(source, data)
         except PacketInvalid as err:
-            log.info("Dropping invalid packet from %r: %r", socket_addr, err)
+            log.info("Dropping invalid packet from %r: %r", source, err)
             return
 
         asyncio.create_task(self.guard(getattr(self._callback, f"receive_{type.name}")(source, **kwargs)))
