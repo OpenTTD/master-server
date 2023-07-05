@@ -50,7 +50,7 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
             self.is_ipv6 = False
 
     def _detect_source_ip_port(self, socket_addr, data):
-        if not self.proxy_protocol:
+        if not self.proxy_protocol or self.socks_proxy:
             source = Source(self, socket_addr, socket_addr[0], socket_addr[1])
             return source, data
 
