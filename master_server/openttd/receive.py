@@ -122,6 +122,7 @@ class OpenTTDProtocolReceive:
                 "map_height",
                 "map_type",
                 "is_dedicated",
+                "ticks_playing",
             ]
         }
 
@@ -162,6 +163,8 @@ class OpenTTDProtocolReceive:
             payload["map_height"], data = read_uint16(data)
             payload["map_type"], data = read_uint8(data)
             payload["is_dedicated"], data = read_uint8(data)
+
+        payload["ticks_playing"] = max(0, (payload["game_date"] - payload["start_date"]) * 74)
 
         if len(data) != 0:
             raise PacketInvalidData("more bytes than expected")
