@@ -11,7 +11,7 @@ These are in a single repository, as they share the same database access.
 
 ## Development
 
-The `master_server` and `web_api` are written in Python 3.8, and makes strong use of asyncio and aiohttp.
+The `master_server` and `web_api` are written in Python 3.11, and makes strong use of asyncio and aiohttp.
 
 Both make use of the AWS DynamoDB database to store the known servers.
 
@@ -19,7 +19,7 @@ Both make use of the AWS DynamoDB database to store the known servers.
 
 #### Dependencies
 
-- Python3.8 or higher.
+- Python3.11 or higher.
 - Docker
 
 #### Preparing your venv
