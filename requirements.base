@@ -1,8 +1,8 @@
 aiohttp
-aioredis
 click
 hiredis
 sentry-sdk
 openttd-helpers
 pproxy
 PynamoDB
+redis

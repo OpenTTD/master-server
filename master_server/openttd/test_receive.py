@@ -28,7 +28,7 @@ def test_receive_packet_success(data, result):
     [
         (b"\x05\x00\x06\x01", PacketInvalidSize),
         (b"\x03\x00\x06\x01", PacketInvalidSize),
-        (b"\x03\x00\xFF", PacketInvalidType),
+        (b"\x03\x00\xff", PacketInvalidType),
         (b"\x03\x00\x00", PacketInvalidType),
     ],
 )
@@ -68,8 +68,8 @@ def test_receive_PACKET_UDP_CLIENT_GET_LIST_success(ip, data, result):
         b"",
         b"\x02",
         # Too much data
-        b"\x01\xFF",
-        b"\x02\x00\xFF",
+        b"\x01\xff",
+        b"\x02\x00\xff",
         # Invalid version number
         b"\x00",
         b"\x03",
@@ -103,8 +103,8 @@ def test_receive_PACKET_UDP_SERVER_REGISTER_success(data, result):
         b"OpenTTDRegister\x00\x01\x34",
         b"OpenTTDRegister\x00\x02\x34\x12\x01\x00\x00\x00\x00\x00\x00",
         # Too much data
-        b"OpenTTDRegister\x00\x01\x34\x12\xFF",
-        b"OpenTTDRegister\x00\x02\x34\x12\x01\x00\x00\x00\x00\x00\x00\x00\xFF",
+        b"OpenTTDRegister\x00\x01\x34\x12\xff",
+        b"OpenTTDRegister\x00\x02\x34\x12\x01\x00\x00\x00\x00\x00\x00\x00\xff",
         # Invalid version number
         b"OpenTTDRegister\x00\x00\x34\x12",
         b"OpenTTDRegister\x00\x03\x34\x12",
@@ -138,8 +138,8 @@ def test_receive_PACKET_UDP_SERVER_UNREGISTER_success(data, result):
         b"\x01\x34",
         b"\x02\x34",
         # Too much data
-        b"\x01\x34\x12\xFF",
-        b"\x02\x34\x12\xFF",
+        b"\x01\x34\x12\xff",
+        b"\x02\x34\x12\xff",
         # Invalid version number
         b"\x00\x34\x12",
         b"\x03\x34\x12",

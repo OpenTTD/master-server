@@ -1,4 +1,3 @@
-import aioredis
 import click
 import hashlib
 import ipaddress
@@ -6,6 +5,7 @@ import json
 import logging
 
 from openttd_helpers import click_helper
+from redis import asyncio as aioredis
 
 from .interface import DatabaseInterface
 
