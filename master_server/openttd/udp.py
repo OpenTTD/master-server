@@ -70,7 +70,7 @@ class OpenTTDProtocolUDP(asyncio.DatagramProtocol, OpenTTDProtocolReceive, OpenT
         # Example how 'proxy' looks:
         #  PROXY UDP4 127.0.0.1 127.0.0.1 33487 12345
 
-        (_, _, ip, _, port, _) = proxy.split(" ")
+        _, _, ip, _, port, _ = proxy.split(" ")
         source = Source(self, socket_addr, ip, int(port))
 
         return source, data
